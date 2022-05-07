@@ -1,0 +1,90 @@
+---
+title: "IS4300 Final Project"
+author: "Devin Bagley"
+date: "5/6/2022"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+#Import Libraries.
+library(ggplot2) 
+library(dplyr)
+library(dslabs)
+library(tidyverse)
+
+#This is my github account.
+URL <- "https://raw.githubusercontent.com/Melee1114/IS3400Project/main/cricketer.csv"
+cricket <- read_csv(URL)
+```
+First let's make sure the data has been imported correctly.
+
+```{r,echo = FALSE}
+#Test for data.
+head(cricket)
+```
+It worked.
+
+The variable names have been altered slightly from the excel sheet for continuity and clarity. Those changes are listed here:
+
+x -> ID,
+left -> hand,
+year -> birthYear,
+life -> lifeSpan,
+acd -> accident,
+inbed -> inBed.
+
+## Introduction
+
+In this report we will look at a chi-squared test and charts for British Cricketers from the past. We will look at the difference in life span between people that died in an accident and the trends that lie within. This data set can be found at <https://github.com/Melee1114/IS3400Project>. The complete data set can be found at <https://vincentarelbundock.github.io/Rdatasets/datasets.html>.
+
+First we'll look at a chart that shows the causes of death based on the ages of the cricketers. Some are still alive so that is also portrayed.
+```{r cricket, echo=FALSE}
+#Change the nicknames because they're confusing
+colnames(cricket) <- c("ID","hand","birthYear","lifeSpan","dead","accident","kia","inBed","cause")
+
+#Convert to ggplot
+G <- cricket %>% ggplot()
+#Create the historgram and show different causes of death.
+G + geom_histogram(aes(x=lifeSpan,fill = cause),color="black",bins=10,
+                   show.legend = TRUE)
+```
+&nbsp;From this we can see that most deaths caused by accidents take place before the age of 50. Cricketers dying in bed are more centralized around the age of 75.
+
+This box chart shows the difference in the amount of deaths by accidents versus by in bed.
+```{r pressure, echo=FALSE}
+#Filter out alive from the data set.
+cricket_dead <- filter(cricket, cricket$cause == "acd" | cricket$cause == "inbed")
+#Convert to ggplot.
+G <- cricket_dead %>% ggplot()
+#Create a box plot that shows concentration of causes of death compared to life span.
+G + geom_boxplot(aes(lifeSpan,fill= cause),show.legend = TRUE)
+```
+Based on this information, we can look at when a cricketer dies, the probability they die to an accident versus in bed.
+
+## Chi-Squared Test
+We can run the test in R by rolling a sample continuously and looking at both the expected probability and the actual probability. Here are the results:
+```{r,echo=FALSE}
+#Filter each data set to only count number of deaths
+cricket_acd <- filter(cricket, cricket$cause == "acd")
+cricket_inbed <- filter(cricket, cricket$cause == "inbed")
+
+#Count the number of times these occur
+dice <- c(replicate(nrow(cricket_acd),"acd"),replicate(nrow(cricket_inbed),"inbed"))
+
+#Roll the dice 10000 times for probability.
+Sample10000 <- sample(dice,10000,replace = TRUE)
+Sample10000 <-table(Sample10000)
+Sample10000
+
+#Counted for expected
+#nrow(cricket_inbed)
+Expected <- c(555,9445)
+Sample10000 <- rbind(Sample10000,Expected)
+Sample10000
+
+#Chi-square test.
+chisq.test(Sample10000)
+
+
+```
+We conclude that our sample is close to the expected for randomness because of the low p-value.
