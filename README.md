@@ -1,2 +1,2 @@
 # IS3400Project
-This project looks at the crickets dataset and analyzes the trends between different factors to look for correlations.
+This project looks at the Crickets dataset and analyzes the differences between different causes of death and at which age the cricketers died.
